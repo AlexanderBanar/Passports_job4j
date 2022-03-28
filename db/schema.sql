@@ -29,3 +29,13 @@ insert into passports(fullName, expiration) VALUES ('Petrova Elena Nikolaevna',	
 update passports set serial = 1232, number = 440236 where id = 6;
 update passports set serial = 1232, number = 618769 where id = 7;
 update passports set serial = 1232, number = 853476 where id = 8;
+
+alter table passports add column birthday timestamp without time zone;
+update passports set birthday = '2005-11-01' where id = 1;
+update passports set birthday = '2002-03-01' where id = 2;
+update passports set birthday = '2002-08-01' where id = 3;
+update passports set birthday = '2002-05-01' where id = 4;
+update passports set birthday = '2002-06-01' where id = 5;
+update passports set birthday = '2001-09-01' where id = 6;
+update passports set birthday = '2002-01-01' where id = 7;
+update passports set birthday = '2002-01-01' where id = 8;

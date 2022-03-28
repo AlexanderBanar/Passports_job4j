@@ -1,13 +1,15 @@
 package job4j.passports.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import javax.persistence.*;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.Objects;
 
 @Entity
-@Table(name = "passports")
+@Table(name = "passports",
+uniqueConstraints = {@UniqueConstraint(name = "UniqueSerialAndNumber",
+columnNames = {"serial", "number"})})
 public class Passport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,19 +17,23 @@ public class Passport {
 
     private int serial;
     private int number;
+
+    @Column(name = "fullname")
     private String fullName;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(pattern="yyyy-MM-dd")
+    private Date birthday;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date expiration;
 
-    public static Passport of(String fullName, int serial, int number) {
+    public static Passport of(String fullName, int serial, int number, Date birthday) {
         Passport passport = new Passport();
         passport.fullName = fullName;
         passport.serial = serial;
         passport.number = number;
-        LocalDate localDate = LocalDate.now().plusYears(10);
-        passport.expiration = Date.from(
-                localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        passport.birthday = birthday;
         return passport;
     }
 
@@ -61,6 +67,14 @@ public class Passport {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public Date getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(Date birthday) {
+        this.birthday = birthday;
     }
 
     public Date getExpiration() {

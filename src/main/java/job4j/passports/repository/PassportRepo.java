@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.List;
 
 public interface PassportRepo extends CrudRepository<Passport, Integer> {
-    Passport findBySerial(int serial);
+    List<Passport> findBySerial(int serial);
 
     List<Passport> findAllByExpirationBefore(Date date);
 }

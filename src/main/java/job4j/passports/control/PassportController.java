@@ -1,34 +1,40 @@
 package job4j.passports.control;
 
 import job4j.passports.domain.Passport;
-import job4j.passports.repository.PassportRepo;
+import job4j.passports.service.PassportService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping("/passports")
 public class PassportController {
-    private PassportRepo passportRepo;
+    private PassportService passportService;
 
-    public PassportController(PassportRepo passportRepo) {
-        this.passportRepo = passportRepo;
+    public PassportController(PassportService passportService) {
+        this.passportService = passportService;
     }
 
     @PostMapping("/save")
     public ResponseEntity<Passport> save(@RequestBody Passport passport) {
-        return new ResponseEntity<>(
-                passportRepo.save(passport),
-                HttpStatus.CREATED
-        );
+        Passport savedPassport = passportService.save(passport);
+        if (savedPassport.getId() == 0) {
+            return new ResponseEntity<>(
+                    Passport.of("null", 0, 0, null),
+                    HttpStatus.BAD_REQUEST
+            );
+        } else {
+            return new ResponseEntity<>(
+                    savedPassport,
+                    HttpStatus.CREATED
+            );
+        }
     }
 
     @PutMapping("/update?id={id}")
@@ -37,53 +43,50 @@ public class PassportController {
         if (id == 0) {
             return ResponseEntity.badRequest().build();
         }
-        Optional passOpt = passportRepo.findById(id);
-        if (passOpt.isPresent() && passport.getId() == id) {
-            passportRepo.save(passport);
+        if (passportService.isSaved(id) && passport.getId() == id) {
+            passportService.save(passport);
             return ResponseEntity.ok().build();
         } else {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
         }
     }
 
     @DeleteMapping("/delete?id={id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         if (id <= 0) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
         }
         Passport passport = new Passport();
         passport.setId(id);
-        passportRepo.delete(passport);
-        return ResponseEntity.ok().build();
+        if (passportService.delete(passport)) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/find")
     public List<Passport> findAll() {
-        return StreamSupport.stream(
-                passportRepo.findAll().spliterator(), false
-        ).collect(Collectors.toList());
+        return passportService.findAll();
     }
 
     @GetMapping("/find?serial={serial}")
-    public ResponseEntity<Passport> findBySerial(@PathVariable int serial) {
+    public List<Passport> findBySerial(@PathVariable int serial) {
         if (serial <= 0) {
-            return ResponseEntity.badRequest().build();
+            return Collections.emptyList();
         }
-        return new ResponseEntity<>(
-                passportRepo.findBySerial(serial),
-                HttpStatus.OK
-        );
+        return passportService.findBySerial(serial);
     }
 
     @GetMapping("/unavailable")
     public List<Passport> findExpired() {
-        return passportRepo.findAllByExpirationBefore(new Date());
+        return passportService.findAllByExpirationBefore(new Date());
     }
 
     @GetMapping("/find-replaceable")
     public List<Passport> findReplaceable() {
         LocalDate localDate = LocalDate.now().minusMonths(3);
         Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        return passportRepo.findAllByExpirationBefore(date);
+        return passportService.findAllByExpirationBefore(date);
     }
 }
