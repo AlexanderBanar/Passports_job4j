@@ -97,4 +97,16 @@ public class Passport {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+    @Override
+    public String toString() {
+        return "Passport{"
+                + "id=" + id
+                + ", serial=" + serial
+                + ", number=" + number
+                + ", fullName='" + fullName + '\''
+                + ", birthday=" + birthday
+                + ", expiration=" + expiration
+                + '}';
+    }
 }
